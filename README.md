@@ -23,7 +23,7 @@ db = DataBase(
     cache_format="parquet",           # "csv" or "parquet"
     compress=True,                    # gzip for CSV, codec for Parquet
     parquet_codec="snappy",           # "snappy" or "zstd" (for parquet)
-    compression-lEVEL=9,              # only used if cache_format="csv"
+    compression-level=9,              # only used if cache_format="csv"
     partitioning="monthly",           # "none" | "daily" | "monthly"
     index_columns=["id", "datetime"], # used for de-duplication when merging deltas
     datetime_tz="UTC",                # normalize all timestamps to UTC in cache
