@@ -1,12 +1,16 @@
 # dbcache (v0.2.5)
 
-Instalation
+### Instalation
 ```bash
-pip install dbcache @ https://github.com/JorgeHSantana/dbcache.git
+pip install "dbcache @ git+https://github.com/JorgeHSantana/dbcache.git@main"
+```
+or
+```bash
+pip install "dbcache[all] @ git+https://github.com/JorgeHSantana/dbcache.git@main"
 ```
 
-Example
-```
+### Example
+```python
 # -*- coding: utf-8 -*-
 from dbcache import DataBase, CacheHint, enable_db_hit_prints, SchemaMismatchError
 from datetime import datetime, timezone
