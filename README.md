@@ -1,4 +1,4 @@
-# dbcache (v0.2.5)
+# dbcache
 
 ### Instalation
 ```bash
