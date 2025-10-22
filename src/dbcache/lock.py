@@ -1,5 +1,7 @@
 from __future__ import annotations
-import os, time, errno
+import os
+import time
+import errno
 
 class FileLock:
     def __init__(self, path: str, timeout: float = 30.0, poll: float = 0.1):
