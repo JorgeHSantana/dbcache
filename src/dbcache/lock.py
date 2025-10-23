@@ -1,16 +1,14 @@
-from __future__ import annotations
-import os
-import time
-import errno
+
+import os, time, errno
 
 class FileLock:
     def __init__(self, path: str, timeout: float = 30.0, poll: float = 0.1):
         self.lock_path = f"{path}.lock"
         self.timeout = timeout
         self.poll = poll
-        self._fd: int | None = None
+        self._fd = None
 
-    def acquire(self) -> None:
+    def acquire(self):
         start = time.time()
         while True:
             try:
@@ -25,7 +23,7 @@ class FileLock:
                     raise TimeoutError(f"Timeout acquiring lock: {self.lock_path}")
                 time.sleep(self.poll)
 
-    def release(self) -> None:
+    def release(self):
         if self._fd is not None:
             try:
                 os.close(self._fd)
@@ -36,9 +34,5 @@ class FileLock:
                 except FileNotFoundError:
                     pass
 
-    def __enter__(self):
-        self.acquire()
-        return self
-
-    def __exit__(self, exc_type, exc, tb):
-        self.release()
+    def __enter__(self): self.acquire(); return self
+    def __exit__(self, exc_type, exc, tb): self.release()
