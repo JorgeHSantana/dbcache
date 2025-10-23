@@ -1,33 +1,29 @@
+
 [build-system]
 requires = ["hatchling>=1.18"]
 build-backend = "hatchling.build"
 
 [project]
 name = "dbcache"
-version = "0.2.5"
-description = "Incremental cache (CSV/Parquet) for SELECT with temporal partitioning and deduplication."
+version = "0.2.12"
+description = "Incremental cache (CSV/Parquet) for SELECTs with partitioning, dedupe, schema checks. Postgres + MySQL. Gap-filling in one query."
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
-authors = [{name = "Seu Nome", email = "seu.email@example.com"}]
-keywords = ["cache", "csv", "parquet", "database", "postgres", "etl", "timeseries"]
-classifiers = [
-  "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: MIT License",
-  "Operating System :: OS Independent",
-]
+authors = [{name = "dbcache authors"}]
 dependencies = [
   "pandas>=2.0.0",
   "pyarrow>=13.0.0",
   "psycopg[binary]>=3.1.0; python_version>='3.8'",
   "psycopg2-binary>=2.9.0",
+  "pymysql>=1.1.0",
 ]
 
 [project.optional-dependencies]
-postgres = ["psycopg>=3.1.0; python_version>='3.8'", "psycopg2-binary>=2.9.0"]
+mysql = ["mysqlclient>=2.2"]
+postgres = ["psycopg2-binary>=2.9.0", "psycopg>=3.1.0; python_version>='3.8'"]
 parquet = ["pyarrow>=13.0.0"]
-dbcache = ["pyarrow>=13.0.0", "psycopg>=3.1.0; python_version>='3.8'", "psycopg2-binary>=2.9.0"]
-all = ["pyarrow>=13.0.0", "psycopg>=3.1.0; python_version>='3.8'", "psycopg2-binary>=2.9.0"]
+all = ["pyarrow>=13.0.0", "psycopg2-binary>=2.9.0", "psycopg>=3.1.0; python_version>='3.8'", "pymysql>=1.1.0", "mysqlclient>=2.2"]
 
 [tool.pytest.ini_options]
 addopts = "-q"

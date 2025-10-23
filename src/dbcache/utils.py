@@ -1,21 +1,15 @@
-from __future__ import annotations
-import re
-import os
-import typing as T
+
+import re, os
+from typing import Any, Dict, Tuple
 import pandas as pd
 
 def ensure_dir(path: str) -> None:
     os.makedirs(path, exist_ok=True)
 
-def parse_lookback(s: str | None) -> pd.Timedelta:
-    if not s:
-        return pd.Timedelta(0)
-    try:
-        return pd.to_timedelta(s)
-    except Exception:
-        return pd.to_timedelta("0min")
+def parse_lookback(s: str) -> pd.Timedelta:
+    return pd.to_timedelta(s or "0min")
 
-def normalize_ts(x: T.Any, tz: str | None) -> pd.Timestamp:
+def normalize_ts(x: Any, tz: str) -> pd.Timestamp:
     ts = pd.to_datetime(x)
     if tz:
         ts = ts.tz_localize(tz) if ts.tzinfo is None else ts.tz_convert(tz)
@@ -34,15 +28,14 @@ def day_key(ts: pd.Timestamp) -> str:
 
 def is_select_sql(sql: str) -> bool:
     stripped = re.sub(r"--.*?$", "", sql, flags=re.MULTILINE).strip()
-    first = stripped.split(None, 1)[0].upper() if stripped else ""
+    if not stripped: return False
+    first = stripped.split(None, 1)[0].upper()
     if first in {"SELECT", "WITH"}:
-        if ";" in stripped.strip(";"):
-            return False
-        return True
+        return ";" not in stripped.strip(";")
     return False
 
-def expand_in_clause(sql: str, params: dict) -> tuple[str, dict]:
-    def repl(m: re.Match):
+def expand_in_clause(sql: str, params: Dict) -> Tuple[str, Dict]:
+    def repl(m: re.Match) -> str:
         name = m.group(1)
         val = params.get(name, None)
         if isinstance(val, (list, tuple)):
@@ -59,8 +52,23 @@ def expand_in_clause(sql: str, params: dict) -> tuple[str, dict]:
     new_sql = pattern.sub(repl, sql)
     return new_sql, params
 
+def _escape_percent_literals_after_named(sql: str) -> str:
+    placeholders = {}
+    def hold(m: re.Match):
+        key = f"__PH_{len(placeholders)}__"
+        placeholders[key] = m.group(0)
+        return key
+    temp = re.sub(r"%\([a-zA-Z_]\w*\)s", hold, sql)
+    temp = temp.replace('%', '%%')
+    for k, v in placeholders.items():
+        temp = temp.replace(k, v)
+    return temp
+
 def to_psycopg_named(sql: str) -> str:
-    def repl(m: re.Match):
-        name = m.group(1)
-        return f"%({name})s"
-    return re.sub(r":([a-zA-Z_]\w*)", repl, sql.replace("::", "\x00")).replace("\x00", "::")
+    sql = re.sub(r":([a-zA-Z_]\w*)", lambda m: f"%({m.group(1)})s", sql.replace("::", "\x00")).replace("\x00", "::")
+    return _escape_percent_literals_after_named(sql)
+
+def neutralize_named_params(sql: str) -> str:
+    sql = re.sub(r"IN\s*\(\s*:[a-zA-Z_]\w*\s*\)", "IN (NULL)", sql, flags=re.IGNORECASE)
+    sql = re.sub(r":[a-zA-Z_]\w*", "NULL", sql)
+    return sql
