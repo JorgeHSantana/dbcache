@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Optional, List, Tuple
 import os, json
 import pandas as pd
-from .utils import ensure_dir, month_key, day_key
+from .utils import ensure_dir
 
 @dataclass
 class CacheHint:
@@ -44,9 +44,9 @@ class CacheManager:
         if self.partitioning == "none":
             return os.path.join(base_root, "full" + ext)
         elif self.partitioning == "daily":
-            sub = os.path.join(base_root, f"{ts.year:04d}"); ensure_dir(sub); return os.path.join(sub, f"{day_key(ts)}{ext}")
+            sub = os.path.join(base_root, f"{ts.year:04d}"); ensure_dir(sub); return os.path.join(sub, f"{ts.year:04d}-{ts.month:02d}-{ts.day:02d}{ext}")
         else:
-            sub = os.path.join(base_root, f"{ts.year:04d}"); ensure_dir(sub); return os.path.join(sub, f"{month_key(ts)}{ext}")
+            sub = os.path.join(base_root, f"{ts.year:04d}"); ensure_dir(sub); return os.path.join(sub, f"{ts.year:04d}-{ts.month:02d}{ext}")
 
     def read_catalog(self, base_root: str) -> dict:
         path = self.catalog_path(base_root)

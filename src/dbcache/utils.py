@@ -20,12 +20,6 @@ def normalize_ts(x: Any, tz: str) -> pd.Timestamp:
         ts = ts.tz_convert("UTC")
     return ts
 
-def month_key(ts: pd.Timestamp) -> str:
-    return f"{ts.year:04d}-{ts.month:02d}"
-
-def day_key(ts: pd.Timestamp) -> str:
-    return f"{ts.year:04d}-{ts.month:02d}-{ts.day:02d}"
-
 def is_select_sql(sql: str) -> bool:
     stripped = re.sub(r"--.*?$", "", sql, flags=re.MULTILINE).strip()
     if not stripped: return False
@@ -65,7 +59,7 @@ def _escape_percent_literals_after_named(sql: str) -> str:
     return temp
 
 def to_psycopg_named(sql: str) -> str:
-    sql = re.sub(r":([a-zA-Z_]\w*)", lambda m: f"%({m.group(1)})s", sql.replace("::", "\x00")).replace("\x00", "::")
+    sql = re.sub(r":([a-zA-Z_]\w*)", lambda m: f"%({m.group(1)})s", sql.replace("::", "\\x00")).replace("\\x00", "::")
     return _escape_percent_literals_after_named(sql)
 
 def neutralize_named_params(sql: str) -> str:

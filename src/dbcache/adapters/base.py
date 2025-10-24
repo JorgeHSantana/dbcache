@@ -1,5 +1,5 @@
 
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict
 import pandas as pd
 
 class Adapter:

@@ -73,3 +73,5 @@ class PostgresAdapter(Adapter):
                 return [d[0] for d in cur.description]
         finally:
             self.close(conn)
+
+    def quote_ident(self, name: str) -> str: return f'"{name}"'
