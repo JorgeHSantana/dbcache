@@ -12,9 +12,9 @@ def parse_lookback(s: str) -> pd.Timedelta:
 def normalize_ts(x: Any, tz: str) -> pd.Timestamp:
     ts = pd.to_datetime(x)
     if tz:
-        ts = ts.tz_localize(tz) if ts.tzinfo is None else ts.tz_convert(tz)
+        ts = ts.tz_localize(tz) if getattr(ts, "tzinfo", None) is None else ts.tz_convert(tz)
         ts = ts.tz_convert("UTC")
-    elif ts.tzinfo is None:
+    elif getattr(ts, "tzinfo", None) is None:
         ts = ts.tz_localize("UTC")
     else:
         ts = ts.tz_convert("UTC")
@@ -53,7 +53,6 @@ def expand_in_clause(sql: str, params: Dict) -> Tuple[str, Dict]:
     return new_sql, params
 
 def _escape_percent_literals_after_named(sql: str) -> str:
-    """Escape % literals for DB-API 'pyformat' while keeping %(name)s placeholders intact."""
     placeholders = {}
     def hold(m: re.Match):
         key = f"__PH_{len(placeholders)}__"
@@ -70,7 +69,6 @@ def to_psycopg_named(sql: str) -> str:
     return _escape_percent_literals_after_named(sql)
 
 def neutralize_named_params(sql: str) -> str:
-    """Replace :name parameters with NULL for peek-only queries."""
     sql = re.sub(r"IN\s*\(\s*:[a-zA-Z_]\w*\s*\)", "IN (NULL)", sql, flags=re.IGNORECASE)
     sql = re.sub(r":[a-zA-Z_]\w*", "NULL", sql)
     return sql

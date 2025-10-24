@@ -5,8 +5,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dbcache"
-version = "0.2.12"
-description = "Incremental cache (CSV/Parquet) for SELECTs with partitioning, dedupe, schema checks. Postgres + MySQL. Gap-filling in one query."
+version = "0.2.15"
+description = "Incremental DB-to-disk cache (CSV/Parquet) with gap-filling, schema guard, Postgres/MySQL adapters, timeout & cache fallback."
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
@@ -24,6 +24,12 @@ mysql = ["mysqlclient>=2.2"]
 postgres = ["psycopg2-binary>=2.9.0", "psycopg>=3.1.0; python_version>='3.8'"]
 parquet = ["pyarrow>=13.0.0"]
 all = ["pyarrow>=13.0.0", "psycopg2-binary>=2.9.0", "psycopg>=3.1.0; python_version>='3.8'", "pymysql>=1.1.0", "mysqlclient>=2.2"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dbcache"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/**", "README.md", "pyproject.toml", "tests/**"]
 
 [tool.pytest.ini_options]
 addopts = "-q"

@@ -13,7 +13,6 @@ class CacheHint:
     index_columns: Optional[List[str]] = None
     partitioning: str = "monthly"
     lookback: Optional[str] = None
-    # New in 0.2.12
     fill_gaps: bool = False
     max_segments: int = 24
 

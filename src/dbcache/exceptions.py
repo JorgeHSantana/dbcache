@@ -1,3 +1,2 @@
-
 class SchemaMismatchError(Exception):
     pass

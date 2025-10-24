@@ -12,18 +12,15 @@ def _to_named(sql: str) -> str:
     return _escape_percent_literals_after_named(sql)
 
 class MySQLAdapter(Adapter):
-    def __init__(self, host: str, port: int, user: str, password: str, dbname: str, tz: Optional[str]):
-        super().__init__(host, port, user, password, dbname, tz)
-        self._driver = None
-        self._connect_fn = None
-        self._prepare_driver()
+    def __init__(self, host: str, port: int, user: str, password: str, dbname: str, tz: Optional[str], conn_timeout: float = 10.0):
+        super().__init__(host, port, user, password, dbname, tz, conn_timeout)
+        self._driver = None; self._connect_fn = None; self._prepare_driver()
 
     def _prepare_driver(self):
         try:
             import pymysql  # type: ignore
             self._driver = "pymysql"; self._connect_fn = pymysql.connect; return
-        except Exception:
-            pass
+        except Exception: pass
         try:
             import MySQLdb  # type: ignore
             self._driver = "mysqldb"; self._connect_fn = MySQLdb.connect; return
@@ -31,7 +28,11 @@ class MySQLAdapter(Adapter):
             raise RuntimeError("MySQL support requires: pip install 'pymysql' (default) OR pip install 'mysqlclient'") from e
 
     def connect(self):
-        return self._connect_fn(host=self.host, port=self.port, user=self.user, passwd=self.password, db=self.dbname, charset="utf8mb4", autocommit=True)
+        return self._connect_fn(
+            host=self.host, port=self.port, user=self.user, passwd=self.password, db=self.dbname,
+            charset="utf8mb4", autocommit=True,
+            connect_timeout=int(max(1, round(self.conn_timeout)))
+        )
 
     def execute_select(self, sql: str, params: Optional[Dict] = None) -> pd.DataFrame:
         sql, params = expand_in_clause(sql, params or {})
@@ -74,20 +75,5 @@ class MySQLAdapter(Adapter):
         cols = [d[0] for d in (cur.description or [])]
         cur.close(); conn.close()
         return cols
-
-    def build_segmented_query(self, table: str, columns: Optional[List[str]], datetime_column: str, segments, where: Optional[str], order_by: Optional[str]):
-        cols = "*" if not columns else ", ".join([self.quote_ident(c) for c in columns])
-        union_rows=[]; params={}
-        for i,(s,e) in enumerate(segments):
-            params[f"s{i}"]=s.isoformat(); params[f"e{i}"]=e.isoformat()
-            union_rows.append(f"SELECT CAST(%(s{i})s AS DATETIME) AS s, CAST(%(e{i})s AS DATETIME) AS e")
-        seg_sql=" \nUNION ALL\n ".join(union_rows) if union_rows else "SELECT NULL AS s, NULL AS e LIMIT 0"
-        sql=[
-            f"SELECT {cols} FROM {self.quote_ident(table)} t",
-            "JOIN (", seg_sql, f") AS segs ON t.{datetime_column} >= segs.s AND t.{datetime_column} < segs.e"
-        ]
-        if where: sql.append("WHERE ("+where+")")
-        if order_by: sql.append("ORDER BY "+order_by)
-        return "\n".join(sql), params
 
     def quote_ident(self, name: str) -> str: return f"`{name}`"
