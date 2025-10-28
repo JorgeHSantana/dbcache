@@ -125,7 +125,8 @@ try:
         end=end,
         datetime_column="datetime",              # the table’s datetime column
         where='created > "datetime"',            # optional extra filter
-        order_by="datetime"                      # optional ORDER BY
+        order_by="datetime",                     # optional ORDER BY
+        index_columns=["id", "datetime"]         # de-duplication keys while merging.
     )
     print("=== Table-based fetch ===")
     print(df_tbl.head())

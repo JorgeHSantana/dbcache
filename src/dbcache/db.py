@@ -286,7 +286,8 @@ class DataBase:
 
     def get_table(self, table: str, columns: Optional[List[str]], start, end, datetime_column: str,
                   where: Optional[str] = None, order_by: Optional[str] = None,
-                  *, fill_gaps: bool = True, max_segments: int = 24) -> pd.DataFrame:
+                  *, fill_gaps: bool = True, max_segments: int = 24,
+                  index_columns: Optional[List[str]] = None) -> pd.DataFrame:
         start_ts = normalize_ts(start, self.datetime_tz)
         end_ts   = normalize_ts(end, self.datetime_tz)
         base_root = self.cache.table_root(table)
@@ -348,9 +349,19 @@ class DataBase:
             raise
 
         merged = pd.concat([cached, delta], ignore_index=True) if not cached.empty else delta
-        if self.index_columns:
-            use = [c for c in self.index_columns if c in merged.columns]
-            if use: merged = merged.drop_duplicates(subset=use, keep="last", ignore_index=True)
+        # Dedupe strategy:
+        # - Prefer explicit 'index_columns' passed to this call
+        # - Fallback to self.index_columns
+        # - Only deduplicate on subset if ALL columns in the subset exist
+        # - If no subset is provided, dedupe exact duplicates only
+        subset = index_columns if index_columns is not None else self.index_columns
+        if subset:
+            if all(c in merged.columns for c in subset):
+                merged = merged.drop_duplicates(subset=subset, keep="last", ignore_index=True)
+            else:
+                # Skip partial-subset dedupe to avoid collapsing distinct rows by accident
+                # print("[dbcache][warn] Skipping subset dedupe: not all columns present", subset)
+                pass
         else:
             merged = merged.drop_duplicates(keep="last", ignore_index=True)
         self._write_partitions_window(base_root, merged, datetime_column)
