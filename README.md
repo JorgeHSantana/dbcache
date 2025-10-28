@@ -22,9 +22,9 @@ Incremental, on-disk caching for SELECT queries (Postgres & MySQL) with partitio
 
 ### From zip (recommended for pinned build)
 ```bash
-pip install /path/to/dbcache_0_2_16.zip
+pip install /path/to/dbcache.zip
 # or with extras:
-pip install "dbcache[all] @ file:///ABSOLUTE/path/dbcache_0_2_16.zip"
+pip install "dbcache[all] @ file:///ABSOLUTE/path/dbcache.zip"
 ```
 
 ### From a local folder (editable dev install)
